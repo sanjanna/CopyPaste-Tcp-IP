@@ -1,0 +1,47 @@
+/* tcpechoclient.c */
+
+#include "inet.h"
+#define BUFSIZE 1024
+
+main (int argc, char *argv[])
+{
+    int sockfd; // client socket
+    char buffer[BUFSIZE+1];
+    struct sockaddr_in serv_addr;
+
+    if(argc <= 1)
+    {
+      printf("How to use : %s remoteIPaddress [example: ./client 127.0.0.1]\n", argv[0]);
+      exit(1);
+    }
+
+    bzero( (char *) &serv_addr, sizeof(serv_addr) );
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons (SERV_TCP_PORT);
+    inet_pton (AF_INET, argv[1], &serv_addr.sin_addr);
+
+    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        perror("Client: socket() error\n");
+        exit (1);
+    }
+
+    if(connect(sockfd,(struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
+        perror("Client: connect() error\n");
+        exit (1);
+    }
+
+    do
+    {
+
+        printf("\n Please enter the message to be sent to SERVER [type /q to quit]\n");
+        gets(buffer);
+        send (sockfd, buffer, BUFSIZE, 0);
+        bzero( buffer, sizeof(buffer));
+        recv(sockfd, buffer, BUFSIZE, 0);
+        printf("Message received from server : %s\n", buffer);
+    }
+    while (strcmp(buffer , "/q"));
+    close (sockfd);
+}
